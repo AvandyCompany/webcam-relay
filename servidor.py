@@ -8,7 +8,7 @@ async def process_request(path, request_headers):
     if path == "/":
         return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
     
-    # Verifica o handshake WebSocket corretamente (nova API)
+    # A nova API usa .headers.get() em vez de indexação direta
     upgrade = request_headers.headers.get("Upgrade", "").lower()
     if upgrade != "websocket":
         return (404, [], b"")
@@ -16,7 +16,7 @@ async def process_request(path, request_headers):
     return None
 
 async def handler(ws):
-    # ESTA É A CORREÇÃO PRINCIPAL
+    # A CORREÇÃO PRINCIPAL ESTÁ AQUI
     path = ws.request.path
     
     if path == "/cam":
