@@ -4,7 +4,7 @@ tela = set()
 clientes_cam = set()
 
 async def process_request(path, request_headers):
-    # Responde à raiz para o health check do Render
+    # Health check para o Render
     if path == "/":
         return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
     
