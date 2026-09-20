@@ -13,7 +13,7 @@ async def process_request(path, request_headers):
     return None
 
 async def handler(ws):
-    path = ws.path
+    path = ws.request.path
     if path == "/cam":
         clientes_cam.add(ws)
         try:
