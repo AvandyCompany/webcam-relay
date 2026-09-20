@@ -3,22 +3,23 @@ import asyncio, websockets, os
 tela = set()
 clientes_cam = set()
 
-async def process_request(path, request_headers):
+async def process_request(connection, request):
+    path = request.path
+
     # Health check para o Render
     if path == "/":
         return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
-    
-    # A nova API usa .headers.get() em vez de indexação direta
-    upgrade = request_headers.headers.get("Upgrade", "").lower()
+
+    # A nova API usa .headers.get() em vez de indexacao direta
+    upgrade = request.headers.get("Upgrade", "").lower()
     if upgrade != "websocket":
         return (404, [], b"")
-    
+
     return None
 
 async def handler(ws):
-    # A CORREÇÃO PRINCIPAL ESTÁ AQUI
     path = ws.request.path
-    
+
     if path == "/cam":
         clientes_cam.add(ws)
         try:
