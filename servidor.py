@@ -4,11 +4,11 @@ tela = set()
 clientes_cam = set()
 
 async def process_request(path, request_headers):
-    # Health check básico para o Render (evita erro 502)
+    # Responde à raiz para o health check do Render
     if path == "/":
         return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
     
-    # Verifica se é uma tentativa de handshake WebSocket
+    # Verifica o handshake WebSocket corretamente (nova API)
     upgrade = request_headers.headers.get("Upgrade", "").lower()
     if upgrade != "websocket":
         return (404, [], b"")
@@ -16,7 +16,7 @@ async def process_request(path, request_headers):
     return None
 
 async def handler(ws):
-    # A CORREÇÃO PRINCIPAL ESTÁ AQUI:
+    # ESTA É A CORREÇÃO PRINCIPAL
     path = ws.request.path
     
     if path == "/cam":
