@@ -3,55 +3,14 @@ import asyncio, websockets, os
 tela = set()
 clientes_cam = set()
 
-HTML = """<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Webcam Remota</title>
-  <style>
-    body { margin:0; background:#000; display:flex;
-           justify-content:center; align-items:center;
-           height:100vh; overflow:hidden; }
-    img { max-width:100%; max-height:100%; }
-    #status { position:fixed; top:10px; left:10px;
-              color:#0f0; font-family:monospace; font-size:13px; }
-  </style>
-</head>
-<body>
-  <img id="v">
-  <div id="status">Conectando...</div>
-  <script>
-    const URL = "wss://" + location.host + "/tela";
-    let ws;
-    function conectar() {
-      ws = new WebSocket(URL);
-      ws.onopen = () => {
-        document.getElementById("status").textContent = "Conectado";
-      };
-      ws.onmessage = e => {
-        document.getElementById("v").src =
-          "data:image/jpeg;base64," + e.data;
-        document.getElementById("status").textContent =
-          "AO VIVO " + new Date().toLocaleTimeString();
-      };
-      ws.onclose = () => {
-        document.getElementById("status").textContent =
-          "Reconectando...";
-        setTimeout(conectar, 3000);
-      };
-      ws.onerror = () => ws.close();
-    }
-    conectar();
-  </script>
-</body>
-</html>
-"""
-
-async def process_request(path, headers):
-    if path == "/" or path == "/tela" or path == "/cam":
-        # é WebSocket
-        return None
-    return (200, [("Content-Type", "text/html; charset=utf-8")], HTML.encode())
+async def process_request(path, request_headers):
+    # Responde imediatamente a requisições HTTP normais para passar no health check
+    if path == "/":
+        return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
+    # Se não for um handshake WebSocket, retorna 404 para não quebrar a conexão
+    if "Upgrade" not in request_headers or request_headers["Upgrade"].lower() != "websocket":
+        return (404, [], b"")
+    return None
 
 async def handler(ws):
     path = ws.path
@@ -87,12 +46,12 @@ async def handler(ws):
 
 async def main():
     porta = int(os.environ.get("PORT", 8000))
-    print(f"Iniciando servidor na porta {porta}")
+    print(f"--- INICIANDO SERVIDOR NA PORTA {porta} ---")
     async with websockets.serve(
         handler, "0.0.0.0", porta,
         process_request=process_request
     ):
-        print("Servidor pronto")
+        print("--- SERVIDOR PRONTO E AGUARDANDO CONEXÕES ---")
         await asyncio.Future()
 
 asyncio.run(main())
