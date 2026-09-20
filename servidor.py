@@ -4,16 +4,21 @@ tela = set()
 clientes_cam = set()
 
 async def process_request(path, request_headers):
-    # Responde imediatamente a requisições HTTP normais para passar no health check
+    # Health check básico para o Render (evita erro 502)
     if path == "/":
         return (200, [("Content-Type", "text/plain")], b"Servidor WebSocket Ativo")
-    # Se não for um handshake WebSocket, retorna 404 para não quebrar a conexão
-    if "Upgrade" not in request_headers or request_headers["Upgrade"].lower() != "websocket":
+    
+    # Verifica se é uma tentativa de handshake WebSocket
+    upgrade = request_headers.headers.get("Upgrade", "").lower()
+    if upgrade != "websocket":
         return (404, [], b"")
+    
     return None
 
 async def handler(ws):
+    # A CORREÇÃO PRINCIPAL ESTÁ AQUI:
     path = ws.request.path
+    
     if path == "/cam":
         clientes_cam.add(ws)
         try:
@@ -46,12 +51,12 @@ async def handler(ws):
 
 async def main():
     porta = int(os.environ.get("PORT", 8000))
-    print(f"--- INICIANDO SERVIDOR NA PORTA {porta} ---")
+    print(f"--- SERVIDOR NA PORTA {porta} ---")
     async with websockets.serve(
         handler, "0.0.0.0", porta,
         process_request=process_request
     ):
-        print("--- SERVIDOR PRONTO E AGUARDANDO CONEXÕES ---")
+        print("--- PRONTO ---")
         await asyncio.Future()
 
 asyncio.run(main())
